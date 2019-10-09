@@ -3,13 +3,13 @@
     "version": "0.0.0",
     "description": "Dynamic Web Server using Node JS",
     "author": {
-        "name": "",
+        "name": "Lani Lee",
         "email": ""
     },
     "contributors": [
         {
-            "name": "",
-            "email": ""
+            "name": "Jacob Jensen",
+            "email": "jacob@jacobj.org"
         },
         {
             "name": "",
@@ -19,7 +19,7 @@
     "main": "server.js",
     "repository": {
         "type": "git",
-        "url": ""
+        "url": "https://github.com/lani-lee/Project2-DynamicServer"
     },
     "dependencies": {
         "express": "^4.17.1",

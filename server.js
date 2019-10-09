@@ -43,6 +43,7 @@ app.get('/year/:selected_year', (req, res) => {
     ReadFile(path.join(template_dir, 'year.html')).then((template) => {
         let response = template;
         // modify `response` here
+        //inject content for the year etc
         WriteHtml(res, response);
     }).catch((err) => {
         Write404Error(res);
@@ -54,6 +55,7 @@ app.get('/state/:selected_state', (req, res) => {
     ReadFile(path.join(template_dir, 'state.html')).then((template) => {
         let response = template;
         // modify `response` here
+        //inject content for per state, SQL query here????
         WriteHtml(res, response);
     }).catch((err) => {
         Write404Error(res);
