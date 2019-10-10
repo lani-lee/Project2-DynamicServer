@@ -21,7 +21,7 @@ var db = new sqlite3.Database(db_filename, sqlite3.OPEN_READONLY, (err) => {
     }
     else {
         console.log('Now connected to ' + db_filename);
-        Testsql()
+        //Testsql()
     }
 });
 // database command stuff to pull data
@@ -62,7 +62,16 @@ app.get('/year/:selected_year', (req, res) => {
         let response = template;
         // modify `response` here
         //inject content for the year etc
-        WriteHtml(res, response);
+        var coalTotal =0;
+        db.each("SELECT coal FROM Consumption WHERE year = ? ORDER BY year",[req.params.selected_year], (err, rows)=>{
+            console.log(rows);
+                coalTotal = coalTotal + rows.coal
+            console.log(rows.coal + " dis is the individual print")
+        }, () => {
+            console.log(coalTotal);
+            WriteHtml(res, response);
+        });
+        
     }).catch((err) => {
         Write404Error(res);
     });
