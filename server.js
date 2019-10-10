@@ -21,11 +21,29 @@ var db = new sqlite3.Database(db_filename, sqlite3.OPEN_READONLY, (err) => {
     }
     else {
         console.log('Now connected to ' + db_filename);
+        Testsql()
     }
 });
+// database command stuff to pull data
+//SELECT column FROM table WHERE column <op> value ORDER BY column
+//ex: SELECT * FROM Consumption WHERE state_abreviation = 'MN' ORDER BY year
+//use database all not many callback functions, but could have individual ones
+//.tables lists tables
+//PRAGMA table_info(table_name) Lists columns for a table
+//database wiki: https://github.com/mapbox/node-sqlite3/wiki/API#databaseallsql-param--callback
 
 app.use(express.static(public_dir));
+function Testsql(){
+    //db.all("SELECT * FROM Consumption", (err, rows) =>{
+    // db.each("SELECT * FROM Consumption WHERE state_abbreviation = ? ORDER BY year",['MN'], (err, rows)=>{
+        
+    //     console.log(rows)
+    // });
 
+    db.each("SELECT * FROM Consumption WHERE year = ? ORDER BY year",['2014'], (err, rows)=>{
+        console.log(rows)
+    })
+}
 
 // GET request handler for '/'
 app.get('/', (req, res) => {
