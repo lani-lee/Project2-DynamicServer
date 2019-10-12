@@ -92,6 +92,7 @@ app.get('/year/:selected_year', (req, res) => {
             var petroleumString = "var petroleum_count = " + petroleumTotal;
             var renewableString = "var renewable_count = " + renewableTotal;
             var snapshotString = req.params.selected_year + " " +"National Snapshot"
+            var titleString = "<title>"+req.params.selected_year + " " + "US Energy Consumption"+"</title";
             //Replacing the strings with the data totals
             response = response.replace("var year", yearString);
             response = response.replace("var coal_count", coalString);
@@ -103,6 +104,7 @@ app.get('/year/:selected_year', (req, res) => {
             response = response.replace("National Snapshot", snapshotString);
             //Inserting the table.
             response = response.replace("<!-- Data to be inserted here -->", tableString);
+            response = response.replace("<title>US Energy Consumption</title>",titleString);
             WriteHtml(res, response);
         });
         
