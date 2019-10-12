@@ -62,13 +62,47 @@ app.get('/year/:selected_year', (req, res) => {
         let response = template;
         // modify `response` here
         //inject content for the year etc
-        var coalTotal =0;
-        db.each("SELECT coal FROM Consumption WHERE year = ? ORDER BY year",[req.params.selected_year], (err, rows)=>{
+        var coalTotal       = 0;
+        var naturalGasTotal = 0;
+        var nuclearTotal    = 0;
+        var petroleumTotal  = 0;
+        var renewableTotal  = 0;
+        var tableString= "";
+        db.each("SELECT * FROM Consumption WHERE year = ? ORDER BY year",[req.params.selected_year], (err, rows)=>{
             console.log(rows);
-                coalTotal = coalTotal + rows.coal
+            var tableTotalForStateRow = rows.coal+rows.natural_gas+rows.nuclear+rows.petroleum+rows.renewable;
+            tableString = tableString + "<tr>"+"<td>"+rows.state_abbreviation +"</td>"+"<td>"+rows.coal+"</td>"+"<td>"+rows.natural_gas+"</td>"+"<td>"+rows.nuclear+"</td>"+"<td>"+rows.petroleum+"</td>"+"<td>"+rows.renewable+"</td>"+"<td>"+tableTotalForStateRow+"</td>"+"</tr>"+"\n";
+            naturalGasTotal = naturalGasTotal+rows.natural_gas;
+            nuclearTotal    = nuclearTotal+rows.nuclear;
+            petroleumTotal  = petroleumTotal+rows.petroleum;
+            renewableTotal  = renewableTotal+rows.renewable;
+            coalTotal       = coalTotal + rows.coal;
             console.log(rows.coal + " dis is the individual print")
         }, () => {
-            console.log(coalTotal);
+            //testing to make sure totals added correctly.
+            console.log(coalTotal + " coal total");
+            console.log(naturalGasTotal + " Natural Gas Total");
+            console.log(nuclearTotal + " nuclear total");
+            console.log(petroleumTotal + " petroleum total");
+            console.log(renewableTotal + " renewableTotal");
+            var yearString = "var year = " + req.params.selected_year;
+            var coalString = "var coal_count =" + coalTotal;
+            var naturalGasString = "var natural_gas_count = " + naturalGasTotal;
+            var nuclearString = "var nuclear_count = " + nuclearTotal;
+            var petroleumString = "var petroleum_count = " + petroleumTotal;
+            var renewableString = "var renewable_count = " + renewableTotal;
+            var snapshotString = req.params.selected_year + " " +"National Snapshot"
+            //Replacing the strings with the data totals
+            response = response.replace("var year", yearString);
+            response = response.replace("var coal_count", coalString);
+            response = response.replace("var natural_gas_count", naturalGasString);
+            response = response.replace("var nuclear_count",nuclearString);
+            response = response.replace("var petroleum_count", petroleumString);
+            response = response.replace("var renewable_count", renewableString);
+            //Replacing the Header
+            response = response.replace("National Snapshot", snapshotString);
+            //Inserting the table.
+            response = response.replace("<!-- Data to be inserted here -->", tableString);
             WriteHtml(res, response);
         });
         
