@@ -105,6 +105,20 @@ app.get('/year/:selected_year', (req, res) => {
             //Inserting the table.
             response = response.replace("<!-- Data to be inserted here -->", tableString);
             response = response.replace("<title>US Energy Consumption</title>",titleString);
+            
+            
+            var currYear = parseInt(req.params.selected_year);
+            var prevYear = currYear - 1;
+            var nextYear = currYear + 1;
+            if (currYear == 1960) {
+                prevYear = 1960;
+            }
+            else if (currYear == 2017) {
+                nextYear = 2017;
+            }
+            response = response.replace("href=\"\">Prev", "href=\"" + path.join(req.get('host'), "year", prevYear.toString()) + "\">Prev")
+            response = response.replace("href=\"\">Next", "href=\"" + path.join(req.get('host'), "year", nextYear.toString() ) + "\">Next")
+            
             WriteHtml(res, response);
         });
         

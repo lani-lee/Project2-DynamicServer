@@ -4,7 +4,7 @@
     "description": "Dynamic Web Server using Node JS",
     "author": {
         "name": "Lani Lee",
-        "email": ""
+        "email": "lee09113@stthomas.edu"
     },
     "contributors": [
         {
@@ -12,8 +12,8 @@
             "email": "jacob@jacobj.org"
         },
         {
-            "name": "",
-            "email": ""
+            "name": "Lani Lee",
+            "email": "lee09113@stthomas.edu"
         }
     ],
     "main": "server.js",
