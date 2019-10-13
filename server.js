@@ -33,6 +33,7 @@ var db = new sqlite3.Database(db_filename, sqlite3.OPEN_READONLY, (err) => {
 //database wiki: https://github.com/mapbox/node-sqlite3/wiki/API#databaseallsql-param--callback
 
 app.use(express.static(public_dir));
+/*
 function Testsql(){
     //db.all("SELECT * FROM Consumption", (err, rows) =>{
     // db.each("SELECT * FROM Consumption WHERE state_abbreviation = ? ORDER BY year",['MN'], (err, rows)=>{
@@ -44,6 +45,7 @@ function Testsql(){
         console.log(rows)
     })
 }
+*/
 
 // GET request handler for '/'
 app.get('/', (req, res) => {
@@ -69,7 +71,7 @@ app.get('/year/:selected_year', (req, res) => {
         var renewableTotal  = 0;
         var tableString= "";
         db.each("SELECT * FROM Consumption WHERE year = ? ORDER BY year",[req.params.selected_year], (err, rows)=>{
-            console.log(rows);
+            //console.log(rows);
             var tableTotalForStateRow = rows.coal+rows.natural_gas+rows.nuclear+rows.petroleum+rows.renewable;
             tableString = tableString + "<tr>"+"<td>"+rows.state_abbreviation +"</td>"+"<td>"+rows.coal+"</td>"+"<td>"+rows.natural_gas+"</td>"+"<td>"+rows.nuclear+"</td>"+"<td>"+rows.petroleum+"</td>"+"<td>"+rows.renewable+"</td>"+"<td>"+tableTotalForStateRow+"</td>"+"</tr>"+"\n";
             naturalGasTotal = naturalGasTotal+rows.natural_gas;
@@ -77,14 +79,14 @@ app.get('/year/:selected_year', (req, res) => {
             petroleumTotal  = petroleumTotal+rows.petroleum;
             renewableTotal  = renewableTotal+rows.renewable;
             coalTotal       = coalTotal + rows.coal;
-            console.log(rows.coal + " dis is the individual print")
+            //console.log(rows.coal + " dis is the individual print")
         }, () => {
             //testing to make sure totals added correctly.
-            console.log(coalTotal + " coal total");
-            console.log(naturalGasTotal + " Natural Gas Total");
-            console.log(nuclearTotal + " nuclear total");
-            console.log(petroleumTotal + " petroleum total");
-            console.log(renewableTotal + " renewableTotal");
+            // console.log(coalTotal + " coal total");
+            // console.log(naturalGasTotal + " Natural Gas Total");
+            // console.log(nuclearTotal + " nuclear total");
+            // console.log(petroleumTotal + " petroleum total");
+            // console.log(renewableTotal + " renewableTotal");
             var yearString = "var year = " + req.params.selected_year;
             var coalString = "var coal_count =" + coalTotal;
             var naturalGasString = "var natural_gas_count = " + naturalGasTotal;
@@ -105,8 +107,7 @@ app.get('/year/:selected_year', (req, res) => {
             //Inserting the table.
             response = response.replace("<!-- Data to be inserted here -->", tableString);
             response = response.replace("<title>US Energy Consumption</title>",titleString);
-            
-            
+            //Button Features
             var currYear = parseInt(req.params.selected_year);
             var prevYear = currYear - 1;
             var nextYear = currYear + 1;
@@ -132,6 +133,9 @@ app.get('/state/:selected_state', (req, res) => {
     ReadFile(path.join(template_dir, 'state.html')).then((template) => {
         let response = template;
         // modify `response` here
+
+        // for Dynamically populate the <h2> header of the state.html template to include the full name (rather than abbreviation) of the specific state being viewed
+            // could have a dictionary with the abbreviation as the key
         //inject content for per state, SQL query here????
         WriteHtml(res, response);
     }).catch((err) => {
@@ -143,6 +147,33 @@ app.get('/state/:selected_state', (req, res) => {
 app.get('/energy-type/:selected_energy_type', (req, res) => {
     ReadFile(path.join(template_dir, 'energy.html')).then((template) => {
         let response = template;
+        console.log(req.params);
+        // db.each("SELECT year, state_abbreviation, ? FROM Consumption ORDER BY year",[req.params.selected_energy_type], (err,rows)=>{
+        //     console.log(rows);
+        //     //THE PROBLEM IS HOW TO INCLUDE THE TYPE SELECTED IN THERE AND TO HAVE IT ACTUALLY PULL THE DATA FROM THAT CATAGORY AND JUST NOT THE TITLE?
+        // });
+        //IS THERE A BETTER WAY AROUND THIS?
+        var energyString = "SELECT year, state_abbreviation, "+req.params.selected_energy_type+ " FROM Consumption ORDER BY year";
+        var jsonPerState={AK:[], AL:[], AR:[], AZ:[], CA:[], CO:[], CT:[], 
+            DC:[], DE:[], FL:[], GA:[], HI:[], IA:[], ID:[], IL:[], IN:[], 
+            KS:[], KY:[], LA:[], MA:[], MD:[], ME:[], MI:[], MN:[], MO:[],
+            MS:[], MT:[], NC:[], ND:[], NE:[], NH:[], NJ:[], NM:[], NV:[],
+            NY:[], OH:[], OK:[], OR:[], PA:[], RI:[], SC:[], SD:[], TN:[],
+            TX:[], UT:[], VA:[], VT:[], WA:[], WI:[], WV:[], WY:[]};
+        db.each(energyString,(err,rows)=>{
+        /*
+        var newEntry = {year: (year from that row), energyNumber: (number from that year)}
+        var newEntryState = rows.state_abbreviation;
+        Creates the new entry for the entry the state: jsonPerState [newEntryState] = newEntry;
+        */
+            console.log(rows);
+        }, () =>{
+            var consumptionSnapshotString = "<h2>"+req.params.selected_energy_type+" "+"Consumption Snapshot</h2>";
+            //var titleYearString = "<title>"+    
+
+            response.replace("<title>US Energy Consumption</title> <!-- change title to include year (e.g. 1999 US Energy Consumption) -->",)
+            response.replace("<h2>Consumption Snapshot</h2> <!-- change header to include energy type (e.g. Coal Consumption Snaphot) -->",consumptionSnapshotString);
+        });
         // modify `response` here
         WriteHtml(res, response);
     }).catch((err) => {
