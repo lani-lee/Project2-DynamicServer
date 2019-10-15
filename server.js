@@ -156,11 +156,14 @@ app.get('/energy-type/:selected_energy_type', (req, res) => {
             TX:[], UT:[], VA:[], VT:[], WA:[], WI:[], WV:[], WY:[]};
          db.each("SELECT * FROM Consumption ORDER BY year", (err,rows)=>{
              console.log(rows.year, rows.state_abbreviation, rows[req.params.selected_energy_type]);
+             jsonPerState[rows.state_abbreviation].push(rows[req.params.selected_energy_type]);
+             
 
             // var newEntry = {year: (year from that row), energyNumber: (number from that year)}
         // var newEntryState = rows.state_abbreviation;
         // Creates the new entry for the entry the state: jsonPerState [newEntryState] = newEntry;
          }, () =>{
+             console.log(jsonPerState);
                  var consumptionSnapshotString = "<h2>"+req.params.selected_energy_type+" "+"Consumption Snapshot</h2>";
             //     //var titleYearString = "<title>"+    
                 response.replace("<title>US Energy Consumption</title> <!-- change title to include year (e.g. 1999 US Energy Consumption) -->",)
