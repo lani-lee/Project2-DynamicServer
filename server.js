@@ -148,32 +148,26 @@ app.get('/energy-type/:selected_energy_type', (req, res) => {
     ReadFile(path.join(template_dir, 'energy.html')).then((template) => {
         let response = template;
         console.log(req.params);
-        // db.each("SELECT year, state_abbreviation, ? FROM Consumption ORDER BY year",[req.params.selected_energy_type], (err,rows)=>{
-        //     console.log(rows);
-        //     //THE PROBLEM IS HOW TO INCLUDE THE TYPE SELECTED IN THERE AND TO HAVE IT ACTUALLY PULL THE DATA FROM THAT CATAGORY AND JUST NOT THE TITLE?
-        // });
-        //IS THERE A BETTER WAY AROUND THIS?
-        var energyString = "SELECT year, state_abbreviation, "+req.params.selected_energy_type+ " FROM Consumption ORDER BY year";
         var jsonPerState={AK:[], AL:[], AR:[], AZ:[], CA:[], CO:[], CT:[], 
             DC:[], DE:[], FL:[], GA:[], HI:[], IA:[], ID:[], IL:[], IN:[], 
             KS:[], KY:[], LA:[], MA:[], MD:[], ME:[], MI:[], MN:[], MO:[],
             MS:[], MT:[], NC:[], ND:[], NE:[], NH:[], NJ:[], NM:[], NV:[],
             NY:[], OH:[], OK:[], OR:[], PA:[], RI:[], SC:[], SD:[], TN:[],
             TX:[], UT:[], VA:[], VT:[], WA:[], WI:[], WV:[], WY:[]};
-        db.each(energyString,(err,rows)=>{
-        /*
-        var newEntry = {year: (year from that row), energyNumber: (number from that year)}
-        var newEntryState = rows.state_abbreviation;
-        Creates the new entry for the entry the state: jsonPerState [newEntryState] = newEntry;
-        */
-            console.log(rows);
-        }, () =>{
-            var consumptionSnapshotString = "<h2>"+req.params.selected_energy_type+" "+"Consumption Snapshot</h2>";
-            //var titleYearString = "<title>"+    
+         db.each("SELECT * FROM Consumption ORDER BY year", (err,rows)=>{
+             console.log(rows.year, rows.state_abbreviation, rows[req.params.selected_energy_type]);
 
-            response.replace("<title>US Energy Consumption</title> <!-- change title to include year (e.g. 1999 US Energy Consumption) -->",)
-            response.replace("<h2>Consumption Snapshot</h2> <!-- change header to include energy type (e.g. Coal Consumption Snaphot) -->",consumptionSnapshotString);
-        });
+            // var newEntry = {year: (year from that row), energyNumber: (number from that year)}
+        // var newEntryState = rows.state_abbreviation;
+        // Creates the new entry for the entry the state: jsonPerState [newEntryState] = newEntry;
+         }, () =>{
+                 var consumptionSnapshotString = "<h2>"+req.params.selected_energy_type+" "+"Consumption Snapshot</h2>";
+            //     //var titleYearString = "<title>"+    
+                response.replace("<title>US Energy Consumption</title> <!-- change title to include year (e.g. 1999 US Energy Consumption) -->",)
+                 response.replace("<h2>Consumption Snapshot</h2> <!-- change header to include energy type (e.g. Coal Consumption Snaphot) -->",consumptionSnapshotString);
+             });        
+            //{ak: [7189, each one for year per state etc], AL:[]}
+
         // modify `response` here
         WriteHtml(res, response);
     }).catch((err) => {
