@@ -147,32 +147,42 @@ app.get('/state/:selected_state', (req, res) => {
 app.get('/energy-type/:selected_energy_type', (req, res) => {
     ReadFile(path.join(template_dir, 'energy.html')).then((template) => {
         let response = template;
-        console.log(req.params);
+        var energyType = req.params.selected_energy_type;
+        //console.log(req.params);
         var jsonPerState={AK:[], AL:[], AR:[], AZ:[], CA:[], CO:[], CT:[], 
             DC:[], DE:[], FL:[], GA:[], HI:[], IA:[], ID:[], IL:[], IN:[], 
             KS:[], KY:[], LA:[], MA:[], MD:[], ME:[], MI:[], MN:[], MO:[],
             MS:[], MT:[], NC:[], ND:[], NE:[], NH:[], NJ:[], NM:[], NV:[],
             NY:[], OH:[], OK:[], OR:[], PA:[], RI:[], SC:[], SD:[], TN:[],
             TX:[], UT:[], VA:[], VT:[], WA:[], WI:[], WV:[], WY:[]};
-         db.each("SELECT * FROM Consumption ORDER BY year", (err,rows)=>{
-             console.log(rows.year, rows.state_abbreviation, rows[req.params.selected_energy_type]);
-             jsonPerState[rows.state_abbreviation].push(rows[req.params.selected_energy_type]);
-             
-
-            // var newEntry = {year: (year from that row), energyNumber: (number from that year)}
-        // var newEntryState = rows.state_abbreviation;
-        // Creates the new entry for the entry the state: jsonPerState [newEntryState] = newEntry;
-         }, () =>{
-             console.log(jsonPerState);
-                 var consumptionSnapshotString = "<h2>"+req.params.selected_energy_type+" "+"Consumption Snapshot</h2>";
-            //     //var titleYearString = "<title>"+    
-                response.replace("<title>US Energy Consumption</title> <!-- change title to include year (e.g. 1999 US Energy Consumption) -->",)
-                 response.replace("<h2>Consumption Snapshot</h2> <!-- change header to include energy type (e.g. Coal Consumption Snaphot) -->",consumptionSnapshotString);
-             });        
-            //{ak: [7189, each one for year per state etc], AL:[]}
-
-        // modify `response` here
-        WriteHtml(res, response);
+        db.each("SELECT * FROM Consumption ORDER BY year", (err,rows)=>{
+            //console.log(rows.year, rows.state_abbreviation, rows[req.params.selected_energy_type]);
+            jsonPerState[rows.state_abbreviation].push(rows[req.params.selected_energy_type]);
+        }, () =>{
+            //console.log(jsonPerState);
+            var energyTypeString = "var energy_type = "+ energyType;
+            var energyCountsString = "var energy_counts = " + jsonPerState;
+            console.log("selected energy type: "+energyType);
+            // Handling capitalization of the energy type
+            var capitalizedEnergyType
+            if(energyType=="natural_gas"){
+                var energyTypeSplit = energyType.split("_");
+                energyTypeSplit[0] = energyTypeSplit[0].charAt(0).toUpperCase() + energyTypeSplit[0].slice(1);
+                energyTypeSplit[1] = energyTypeSplit[1].charAt(0).toUpperCase() + energyTypeSplit[1].slice(1); 
+                capitalizedEnergyType = energyTypeSplit[0] + " " + energyTypeSplit[1];    
+            }else{
+                capitalizedEnergyType = energyType.charAt(0).toUpperCase() +energyType.slice(1);
+            }
+            
+            var consumptionSnapshotString = "<h2>"+capitalizedEnergyType+" "+"Consumption Snapshot</h2>";
+            var titleEnergyTypeString = "<title>"+ "US" + " " + capitalizedEnergyType +" "+ "Energy Consumption" + "</title>"; 
+            console.log("ConsumptionString :"+consumptionSnapshotString,"titleEnergyString: "+titleEnergyTypeString);
+            response = response.replace("var energy_type", energyTypeString);
+            response = response.replace("var energy_counts", energyCountsString);
+            response = response.replace("<title>US Energy Consumption</title>", titleEnergyTypeString);
+            response = response.replace("<h2>Consumption Snapshot</h2>", consumptionSnapshotString);
+            WriteHtml(res, response);
+            });        
     }).catch((err) => {
         Write404Error(res);
     });
