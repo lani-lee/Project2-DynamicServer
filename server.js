@@ -52,7 +52,34 @@ app.get('/', (req, res) => {
     ReadFile(path.join(template_dir, 'index.html')).then((template) => {
         let response = template;
         // modify `response` here
-        WriteHtml(res, response);
+        var coalTotal       = 0;
+        var naturalGasTotal = 0;
+        var nuclearTotal    = 0;
+        var petroleumTotal  = 0;
+        var renewableTotal  = 0;
+        var tableString= "";
+        db.each("SELECT * FROM Consumption WHERE year = 2017 ORDER BY year", (err, rows)=> {
+            tableString = tableString + "<tr>"+"<td>"+rows.state_abbreviation +"</td>"+"<td>"+rows.coal+"</td>"+"<td>"+rows.natural_gas+"</td>"+"<td>"+rows.nuclear+"</td>"+"<td>"+rows.petroleum+"</td>"+"<td>"+rows.renewable+"</td>"+"</tr>"+"\n";
+            naturalGasTotal = naturalGasTotal+rows.natural_gas;
+            nuclearTotal    = nuclearTotal+rows.nuclear;
+            petroleumTotal  = petroleumTotal+rows.petroleum;
+            renewableTotal  = renewableTotal+rows.renewable;
+            coalTotal       = coalTotal + rows.coal;
+        }, () => {
+            var coalString = "var coal_count =" + coalTotal;
+            var naturalGasString = "var natural_gas_count = " + naturalGasTotal;
+            var nuclearString = "var nuclear_count = " + nuclearTotal;
+            var petroleumString = "var petroleum_count = " + petroleumTotal;
+            var renewableString = "var renewable_count = " + renewableTotal;
+
+            response = response.replace("var coal_count", coalString);
+            response = response.replace("var natural_gas_count", naturalGasString);
+            response = response.replace("var nuclear_count",nuclearString);
+            response = response.replace("var petroleum_count", petroleumString);
+            response = response.replace("var renewable_count", renewableString);
+            response = response.replace("<!-- Data to be inserted here -->", tableString);
+            WriteHtml(res, response);
+        });
     }).catch((err) => {
         Write404Error(res);
     });
@@ -149,6 +176,7 @@ app.get('/energy-type/:selected_energy_type', (req, res) => {
         let response = template;
         var energyType = req.params.selected_energy_type;
         //console.log(req.params);
+        console.log(req.params.selected_energy_type);
         var jsonPerState={AK:[], AL:[], AR:[], AZ:[], CA:[], CO:[], CT:[], 
             DC:[], DE:[], FL:[], GA:[], HI:[], IA:[], ID:[], IL:[], IN:[], 
             KS:[], KY:[], LA:[], MA:[], MD:[], ME:[], MI:[], MN:[], MO:[],
@@ -158,7 +186,7 @@ app.get('/energy-type/:selected_energy_type', (req, res) => {
         db.each("SELECT * FROM Consumption ORDER BY year", (err,rows)=>{
             //console.log(rows.year, rows.state_abbreviation, rows[req.params.selected_energy_type]);
             jsonPerState[rows.state_abbreviation].push(rows[req.params.selected_energy_type]);
-        }, () =>{
+        }, () => {
             //console.log(jsonPerState);
             var energyTypeString = "var energy_type = "+ energyType;
             var energyCountsString = "var energy_counts = " + jsonPerState;
@@ -181,7 +209,11 @@ app.get('/energy-type/:selected_energy_type', (req, res) => {
             response = response.replace("var energy_counts", energyCountsString);
             response = response.replace("<title>US Energy Consumption</title>", titleEnergyTypeString);
             response = response.replace("<h2>Consumption Snapshot</h2>", consumptionSnapshotString);
+            console.log("Energy Type Check:" +energyType);
+            console.log("energyTypeString: "+energyTypeString)
+            console.log("Var jsonPerStateStringCheck: " + energyCountsString);
             WriteHtml(res, response);
+
             });        
     }).catch((err) => {
         Write404Error(res);
