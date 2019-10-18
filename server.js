@@ -176,7 +176,7 @@ app.get('/energy-type/:selected_energy_type', (req, res) => {
         let response = template;
         var energyType = req.params.selected_energy_type;
         //console.log(req.params);
-        console.log(req.params.selected_energy_type);
+        //console.log(req.params.selected_energy_type);
         var jsonPerState={AK:[], AL:[], AR:[], AZ:[], CA:[], CO:[], CT:[], 
             DC:[], DE:[], FL:[], GA:[], HI:[], IA:[], ID:[], IL:[], IN:[], 
             KS:[], KY:[], LA:[], MA:[], MD:[], ME:[], MI:[], MN:[], MO:[],
@@ -188,11 +188,6 @@ app.get('/energy-type/:selected_energy_type', (req, res) => {
             jsonPerState[rows.state_abbreviation].push(rows[req.params.selected_energy_type]);
         }, () => {
             //console.log(jsonPerState);
-            var energyTypeString = "var energy_type = "+ energyType;
-            var energyCountsString = "var energy_counts = " + jsonPerState;
-            console.log("selected energy type: "+energyType);
-            // Handling capitalization of the energy type
-            var capitalizedEnergyType
             if(energyType=="natural_gas"){
                 var energyTypeSplit = energyType.split("_");
                 energyTypeSplit[0] = energyTypeSplit[0].charAt(0).toUpperCase() + energyTypeSplit[0].slice(1);
@@ -201,17 +196,26 @@ app.get('/energy-type/:selected_energy_type', (req, res) => {
             }else{
                 capitalizedEnergyType = energyType.charAt(0).toUpperCase() +energyType.slice(1);
             }
+            var energyTypeString = "var energy_type = "+"\"" +capitalizedEnergyType + "\"";
+            var energyCountsString = "var energy_counts = " + JSON.stringify(jsonPerState);
+            //console.log("selected energy type: "+energyType);
+            // Handling capitalization of the energy type
+            var capitalizedEnergyType
             
             var consumptionSnapshotString = "<h2>"+capitalizedEnergyType+" "+"Consumption Snapshot</h2>";
             var titleEnergyTypeString = "<title>"+ "US" + " " + capitalizedEnergyType +" "+ "Energy Consumption" + "</title>"; 
-            console.log("ConsumptionString :"+consumptionSnapshotString,"titleEnergyString: "+titleEnergyTypeString);
+            //console.log("ConsumptionString :"+consumptionSnapshotString,"titleEnergyString: "+titleEnergyTypeString);
             response = response.replace("var energy_type", energyTypeString);
             response = response.replace("var energy_counts", energyCountsString);
             response = response.replace("<title>US Energy Consumption</title>", titleEnergyTypeString);
             response = response.replace("<h2>Consumption Snapshot</h2>", consumptionSnapshotString);
-            console.log("Energy Type Check:" +energyType);
-            console.log("energyTypeString: "+energyTypeString)
-            console.log("Var jsonPerStateStringCheck: " + energyCountsString);
+            //console.log("Energy Type Check:" +energyType);
+            //console.log("energyTypeString: "+energyTypeString)
+            //console.log("Var jsonPerStateStringCheck: " + energyCountsString);
+
+
+            //for the buttons, could have a dictionary or an array where it wraps around where it matches from the capitalizedEnergyType
+            //use hoemwork one for the different types of content types as way to figure out
             WriteHtml(res, response);
 
             });        
