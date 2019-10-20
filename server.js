@@ -191,12 +191,62 @@ app.get('/state/:selected_state', (req, res) => {
 			}
 			response = response.replace("<a class=\"prev_next\" href=\"\">XX</a> <!-- change XX to prev", "<a class=\"prev_next\" href=\"" + path.join(req.get('host'), "state", prevLink) + "\">" + prevLink + "</a> <!-- change XX to prev");
 			response = response.replace("<a class=\"prev_next\" href=\"\">XX</a> <!-- change XX to next", "<a class=\"prev_next\" href=\"" + path.join(req.get('host'), "state", nextLink) + "\">" + nextLink + "</a> <!-- change XX to next");
-			
-			//inject content for per state, SQL query here????
-			WriteHtml(res, response);
 		});
+
 		
+		var coal_counts = [];
+		var natural_gas_counts = [];
+		var nuclear_counts = [];
+		var petroleum_counts = [];
+		var renewable_counts = [];
+		var total_counts = [];
+		var tableString = "";
+		// Getting data from database
+		// Building arrays of consumption per year for each resource type
+		db.each("SELECT * FROM Consumption WHERE state_abbreviation=? ORDER BY Year", [state], (err, row) => {
+			coal_counts.push(row.coal);
+			natural_gas_counts.push(row.natural_gas);
+			nuclear_counts.push(row.nuclear);
+			petroleum_counts.push(row.petroleum);
+			renewable_counts.push(row.renewable);
+			total_counts.push(row.coal + row.natural_gas + row.nuclear + row.petroleum + row.renewable);	
+		}, () => {
+		// Building up tableString
+		for(var i=0; i<coal_counts.length; i++) {
+			var year = i + 1960
+			tableString += "<tr>"+"<td>"+year+"</td>"+
+								  "<td>"+coal_counts[i]+"</td>"+
+								  "<td>"+natural_gas_counts[i]+"</td>"+
+								  "<td>"+nuclear_counts[i]+"</td>"+
+								  "<td>"+petroleum_counts[i]+"</td>"+
+								  "<td>"+renewable_counts[i]+"</td>"+
+								  "<td>"+total_counts[i]+"</td>"+"</tr>"+"\n";
+		}
+		response = response.replace("<!-- Data to be inserted here -->", tableString);
 		
+		// ?? format looks correct when template is printed but the graph isn't populating with data	
+		// Building variable replacement strings
+		var stateString = "var state = " + state;
+		var coalString = "var coal_counts = " + "[" + coal_counts + "]";
+		var naturalGasString = "var natural_gas_count = " + "[" + natural_gas_counts + "]";
+		var nuclearString = "var nuclear_counts = " + "[" + nuclear_counts + "]";
+		var petroleumString = "var petroleum_counts = " + "[" + petroleum_counts + "]";
+		var renewableString = "var renewable_counts = " + "[" + renewable_counts + "]";
+		
+		//console.log(coalString);
+
+		// Replacing the strings with the data totals
+		response = response.replace("var state", stateString);
+		response = response.replace("var coal_counts", coalString);
+		response = response.replace("var natural_gas_count", naturalGasString);
+		response = response.replace("var nuclear_counts", nuclearString);
+		response = response.replace("var petroleum_counts", petroleumString);
+		response = response.replace("var renewable_counts", renewableString);
+		
+		//console.log(response);
+		
+		WriteHtml(res, response);		
+		});
     }).catch((err) => {
         Write404Error(res);
     });
