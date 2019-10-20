@@ -159,12 +159,44 @@ app.get('/year/:selected_year', (req, res) => {
 app.get('/state/:selected_state', (req, res) => {
     ReadFile(path.join(template_dir, 'state.html')).then((template) => {
         let response = template;
+		var state = req.params.selected_state;
         // modify `response` here
 
-        // for Dynamically populate the <h2> header of the state.html template to include the full name (rather than abbreviation) of the specific state being viewed
-            // could have a dictionary with the abbreviation as the key
-        //inject content for per state, SQL query here????
-        WriteHtml(res, response);
+		db.get("SELECT * FROM States WHERE state_abbreviation=?",[state], (err,row) => {
+			var fullStateName = row.state_name;
+			// replacing the title and h2 header with the abbreviated and full state name
+			var titleString = "<title>" + state + " Energy Consumption</title>";
+			response = response.replace("<title>US Energy Consumption</title>", titleString);
+			var h2String =  "<h2>" + fullStateName + " Yearly Snapshot</h2>"
+			response = response.replace("<h2>Yearly Snapshot</h2>", h2String);
+			// linking the prev and next state buttons
+			var states = ['AK', 'AL', 'AR', 'AZ', 'CA', 'CO', 'CT', 'DC', 'DE', 'FL', 'GA', 
+						  'HI', 'IA', 'ID', 'IL', 'IN', 'KS', 'KY', 'LA', 'MA', 'MD', 'ME',
+						  'MI', 'MN', 'MO', 'MS', 'MT', 'NC', 'ND', 'NE', 'NH', 'NJ', 'NM', 
+						  'NV', 'NY', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 
+						  'UT', 'VA', 'VT', 'WA', 'WI', 'WV', 'WY'];
+			var prevLink;
+			var nextLink;
+			if(state == "AK") {
+				prevLink = "WY";
+				nextLink = "AL";
+			}
+			else if (state == "WY") {
+				prevLink = "WV";
+				nextLink = "AK";
+			}
+			else {
+				prevLink = states[states.indexOf(state)-1];
+				nextLink = states[states.indexOf(state)+1];
+			}
+			response = response.replace("<a class=\"prev_next\" href=\"\">XX</a> <!-- change XX to prev", "<a class=\"prev_next\" href=\"" + path.join(req.get('host'), "state", prevLink) + "\">" + prevLink + "</a> <!-- change XX to prev");
+			response = response.replace("<a class=\"prev_next\" href=\"\">XX</a> <!-- change XX to next", "<a class=\"prev_next\" href=\"" + path.join(req.get('host'), "state", nextLink) + "\">" + nextLink + "</a> <!-- change XX to next");
+			
+			//inject content for per state, SQL query here????
+			WriteHtml(res, response);
+		});
+		
+		
     }).catch((err) => {
         Write404Error(res);
     });
