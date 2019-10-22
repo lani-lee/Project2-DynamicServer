@@ -192,7 +192,11 @@ app.get('/state/:selected_state', (req, res) => {
 			response = response.replace("<a class=\"prev_next\" href=\"\">XX</a> <!-- change XX to prev", "<a class=\"prev_next\" href=\"" + path.join(req.get('host'), "state", prevLink) + "\">" + prevLink + "</a> <!-- change XX to prev");
 			response = response.replace("<a class=\"prev_next\" href=\"\">XX</a> <!-- change XX to next", "<a class=\"prev_next\" href=\"" + path.join(req.get('host'), "state", nextLink) + "\">" + nextLink + "</a> <!-- change XX to next");
 		});
-
+        
+        
+        // Replace image and alt
+        response = response.replace("<img src=\"/images/noimage.jpg\" alt=\"No Image\"", "<img src=\"/images/" + state + ".jpg" + "\" alt=\"Flag of " + state + "\"");
+        
 		
 		var coal_counts = [];
 		var natural_gas_counts = [];
