@@ -237,8 +237,22 @@ app.get('/state/:selected_state', (req, res) => {
         // Building variable replacement strings
         //all caps to pop and so noticed, not to yell... 
         //IDEA: MAKE A JSON OBJECT FOR THE STATE AND EACH ELEMENT INSIDE IS A LIST OF THE ENERGY TYPE WITH THE CONSUMPTION LOOK AT LINES 272, 291, 292 AND CONSOLE OUT OF 298
+        /*
+
+        var state_data = {coal:[],natural_gas:[],nuclear:[],petroleum:[],renewable:[]}
+
+
+        db each
+        state_data[energy type].push(rows[energy type from row])
+
+        after db each done
+        var stateEnergyString = "var coal_counts = " + JSON.stringify(jsonPerState[coal]);   <--- not too sure if can stringyify like this???
+        maybe stringfy full thing then pull out separately afterwards????
+
+
+        */
 		var stateString = "var state = " + state;
-		var coalString = "var coal_counts = " + "\"" + coal_counts + "\"";
+		var coalString = "var coal_counts = " + "\"" + coal_counts + "\""; 
 		var naturalGasString = "var natural_gas_count = " + "[" + natural_gas_counts + "]";
 		var nuclearString = "var nuclear_counts = " + "[" + nuclear_counts + "]";
 		var petroleumString = "var petroleum_counts = " + "[" + petroleum_counts + "]";
