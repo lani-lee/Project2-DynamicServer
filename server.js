@@ -304,16 +304,7 @@ app.get('/energy-type/:selected_energy_type', (req, res) => {
             //console.log("Var jsonPerStateStringCheck: " + energyCountsString);
             
             //IMAGE Replacement
-            var imageRequested = energyType+".jpg";
-            var newAltText = "Image of " + capitalizedEnergyType;
-            //var imageLocation = path.join(public_dir,'images',imageRequested);
-            var newImageString = "<img src="+"\"" +imageLocation +"\""+ " alt="+"\""+newAltText +"\""+" "+ "width="+"\""+"250"+"\""+ " " +"height="+"\""+"auto"+"\""+ " />";
-            //response.replace('<img src="/images/noimage.jpg" alt="No Image" width="250" height="auto" /> <!-- change src and alt for energy type image -->',newImageString);
-            console.log(newImageString);
-            //console.log(imageLocation);
-            //may have to do a path.join
-            response.replace("noimage.jpg",imageRequested);
-            response.replace("No Image",newAltText);
+            response = response.replace("<img src=\"/images/noimage.jpg\" alt=\"No Image\"", "<img src=\"" + path.join("a", "images", energyType + ".jpg").substring(1) + "\" alt=\"Image of " + capitalizedEnergyType + "\"");
             //for the buttons, could have a dictionary or an array where it wraps around where it matches from the capitalizedEnergyType
             //use hoemwork one for the different types of content types as way to figure out
             WriteHtml(res, response);
