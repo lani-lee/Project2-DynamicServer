@@ -196,11 +196,9 @@ app.get('/state/:selected_state', (req, res) => {
         
         
         // Replace image and alt
-        
-        // response = response.replace("<img src=\"/images/noimage.jpg\" alt=\"No Image\"", "<img src=\"/images/" + state + ".jpg" + "\" alt=\"Flag of " + state + "\"");
         response = response.replace("<img src=\"/images/noimage.jpg\" alt=\"No Image\"", "<img src=\"" + path.join("a", "images", state + ".jpg").substring(1) + "\" alt=\"Flag of " + state + "\"");
         
-		
+        
 		var coal_counts = [];
 		var natural_gas_counts = [];
 		var nuclear_counts = [];
