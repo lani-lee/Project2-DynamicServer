@@ -31,6 +31,7 @@ var db = new sqlite3.Database(db_filename, sqlite3.OPEN_READONLY, (err) => {
 //.tables lists tables
 //PRAGMA table_info(table_name) Lists columns for a table
 //database wiki: https://github.com/mapbox/node-sqlite3/wiki/API#databaseallsql-param--callback
+// pulling images fro here: https://www.pexels.com
 
 app.use(express.static(public_dir));
 /*
@@ -290,6 +291,7 @@ app.get('/energy-type/:selected_energy_type', (req, res) => {
             
             var consumptionSnapshotString = "<h2>"+capitalizedEnergyType+" "+"Consumption Snapshot</h2>";
             var titleEnergyTypeString = "<title>"+ "US" + " " + capitalizedEnergyType +" "+ "Energy Consumption" + "</title>"; 
+            
             //console.log("ConsumptionString :"+consumptionSnapshotString,"titleEnergyString: "+titleEnergyTypeString);
             response = response.replace("var energy_type", energyTypeString);
             response = response.replace("var energy_counts", energyCountsString);
@@ -298,8 +300,18 @@ app.get('/energy-type/:selected_energy_type', (req, res) => {
             //console.log("Energy Type Check:" +energyType);
             //console.log("energyTypeString: "+energyTypeString)
             //console.log("Var jsonPerStateStringCheck: " + energyCountsString);
-
-
+            
+            //IMAGE Replacement
+            var imageRequested = energyType+".jpg";
+            var newAltText = "Image of " + capitalizedEnergyType;
+            //var imageLocation = path.join(public_dir,'images',imageRequested);
+            var newImageString = "<img src="+"\"" +imageLocation +"\""+ " alt="+"\""+newAltText +"\""+" "+ "width="+"\""+"250"+"\""+ " " +"height="+"\""+"auto"+"\""+ " />";
+            //response.replace('<img src="/images/noimage.jpg" alt="No Image" width="250" height="auto" /> <!-- change src and alt for energy type image -->',newImageString);
+            console.log(newImageString);
+            //console.log(imageLocation);
+            //may have to do a path.join
+            response.replace("noimage.jpg",imageRequested);
+            response.replace("No Image",newAltText);
             //for the buttons, could have a dictionary or an array where it wraps around where it matches from the capitalizedEnergyType
             //use hoemwork one for the different types of content types as way to figure out
             WriteHtml(res, response);
