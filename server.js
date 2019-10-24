@@ -293,6 +293,23 @@ app.get('/energy-type/:selected_energy_type', (req, res) => {
             response = response.replace("<img src=\"/images/noimage.jpg\" alt=\"No Image\"", "<img src=\"" + path.join("a", "images", energyType + ".jpg").substring(1) + "\" alt=\"Image of " + capitalizedEnergyType + "\"");
             //for the buttons, could have a dictionary or an array where it wraps around where it matches from the capitalizedEnergyType
             //use hoemwork one for the different types of content types as way to figure out
+            
+            // Building table of total usage of resource per year per state
+            var tableString = "";
+            var yearTotal = 0;
+            for (var i = 0; i < jsonPerState.AK.length; i++) {
+                let year = i + 1960;
+                tableString += "<tr><td>" + year + "</td>";
+                for (var state in jsonPerState) {
+                    tableString += "<td>" + jsonPerState[state][i] + "</td>";
+                    yearTotal += jsonPerState[state][i];
+                }
+                tableString += "<ti>" + yearTotal + "</ti></tr>\n";
+                yearTotal = 0;
+            }
+            response = response.replace("<!-- Data to be inserted here -->", tableString);
+            console.log(tableString);
+            
             WriteHtml(res, response);
 
             });        
