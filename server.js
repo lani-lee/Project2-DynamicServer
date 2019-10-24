@@ -151,8 +151,8 @@ app.get('/year/:selected_year', (req, res) => {
             else if (currYear == 2017) {
                 nextYear = 2017;
             }
-            response = response.replace("href=\"\">Prev", "href=\"" + path.join(req.get('host'), "year", prevYear.toString()) + "\">Prev")
-            response = response.replace("href=\"\">Next", "href=\"" + path.join(req.get('host'), "year", nextYear.toString() ) + "\">Next")
+            response = response.replace("href=\"\">Prev", "href=\"" + "/" + "year" + "/" + prevYear.toString() + "\">Prev");
+            response = response.replace("href=\"\">Next", "href=\"" + "/" + "year" + "/" + nextYear.toString() + "\">Next");
             
             WriteHtml(res, response);
         });
@@ -196,13 +196,11 @@ app.get('/state/:selected_state', (req, res) => {
 				prevLink = states[states.indexOf(state)-1];
 				nextLink = states[states.indexOf(state)+1];
 			}
-			response = response.replace("<a class=\"prev_next\" href=\"\">XX</a> <!-- change XX to prev", "<a class=\"prev_next\" href=\"" + path.join(req.get('host'), "state", prevLink) + "\">" + prevLink + "</a> <!-- change XX to prev");
-			response = response.replace("<a class=\"prev_next\" href=\"\">XX</a> <!-- change XX to next", "<a class=\"prev_next\" href=\"" + path.join(req.get('host'), "state", nextLink) + "\">" + nextLink + "</a> <!-- change XX to next");
-		});
+			response = response.replace("<a class=\"prev_next\" href=\"\">XX</a> <!-- change XX to prev", "<a class=\"prev_next\" href=\"" + "/" + "state" + "/" + prevLink + "\">" + prevLink + "</a> <!-- change XX to prev");
+			response = response.replace("<a class=\"prev_next\" href=\"\">XX</a> <!-- change XX to next", "<a class=\"prev_next\" href=\"" + "/" + "state" + "/" + nextLink + "\">" + nextLink + "</a> <!-- change XX to next");
+        });
         
         // Replace image and alt
-
-        // response = response.replace("<img src=\"/images/noimage.jpg\" alt=\"No Image\"", "<img src=\"/images/" + state + ".jpg" + "\" alt=\"Flag of " + state + "\"");
         response = response.replace("<img src=\"/images/noimage.jpg\" alt=\"No Image\"", "<img src=\"" + path.join("a", "images", state + ".jpg").substring(1) + "\" alt=\"Flag of " + state + "\"");
         
         
