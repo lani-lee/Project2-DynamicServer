@@ -100,17 +100,17 @@ app.get('/year/:selected_year', (req, res) => {
         var petroleumTotal  = 0;
         var renewableTotal  = 0;
         var tableString= "";
-        db.each("SELECT * FROM Consumption WHERE year = ? ORDER BY year",[req.params.selected_year], (err, rows)=>{
+        db.each("SELECT * FROM Consumption WHERE year = ? ORDER BY year",[req.params.selected_year], (err, row)=>{
             //console.log(rows);
-            var tableTotalForStateRow = rows.coal+rows.natural_gas+rows.nuclear+rows.petroleum+rows.renewable;
-            tableString = tableString + "<tr>"+"<td>"+rows.state_abbreviation +"</td>"+"<td>"+rows.coal+"</td>"+"<td>"
-            +rows.natural_gas+"</td>"+"<td>"+rows.nuclear+"</td>"+"<td>"+rows.petroleum+"</td>"+"<td>"+rows.renewable
+            var tableTotalForStateRow = row.coal+row.natural_gas+row.nuclear+row.petroleum+row.renewable;
+            tableString = tableString + "<tr>"+"<td>"+row.state_abbreviation +"</td>"+"<td>"+row.coal+"</td>"+"<td>"
+            +row.natural_gas+"</td>"+"<td>"+row.nuclear+"</td>"+"<td>"+row.petroleum+"</td>"+"<td>"+row.renewable
             +"</td>"+"<td>"+tableTotalForStateRow+"</td>"+"</tr>"+"\n";
-            naturalGasTotal = naturalGasTotal+rows.natural_gas;
-            nuclearTotal    = nuclearTotal+rows.nuclear;
-            petroleumTotal  = petroleumTotal+rows.petroleum;
-            renewableTotal  = renewableTotal+rows.renewable;
-            coalTotal       = coalTotal + rows.coal;
+            naturalGasTotal = naturalGasTotal+row.natural_gas;
+            nuclearTotal    = nuclearTotal+row.nuclear;
+            petroleumTotal  = petroleumTotal+row.petroleum;
+            renewableTotal  = renewableTotal+row.renewable;
+            coalTotal       = coalTotal + row.coal;
             //console.log(rows.coal + " dis is the individual print")
         }, () => {
             //testing to make sure totals added correctly.
@@ -204,83 +204,40 @@ app.get('/state/:selected_state', (req, res) => {
         response = response.replace("<img src=\"/images/noimage.jpg\" alt=\"No Image\"", "<img src=\"" + path.join("a", "images", state + ".jpg").substring(1) + "\" alt=\"Flag of " + state + "\"");
         
         
-		var coal_counts = [];
-		var natural_gas_counts = [];
-		var nuclear_counts = [];
-		var petroleum_counts = [];
-		var renewable_counts = [];
-		var total_counts = [];
-		var tableString = "";
+        var tableString = "";
 		// Getting data from database
         // Building arrays of consumption per year for each resource type
-        var stateOBJ = {coal:[],natural_gas:[],nuclear:[],petroleum:[],renewable:[], totalCountRow:[] };
-
+        var stateOBJ = {coal:[],natural_gas:[],nuclear:[],petroleum:[],renewable:[], totalCountRow:[]};
+        var yearForTableString = 1960;
 		db.each("SELECT * FROM Consumption WHERE state_abbreviation=? ORDER BY Year", [state], (err, row) => {
-            stateOBJ[coal].push(row.coal);
-            stateOBJ[natural_gas].push(row.natural_gas);
-            stateOBJ[nuclear].push(row.nuclear);
-            state[petroleum].push(row.petroleum);
-            state[renewable].push(row.renewable);
+            yearForTableString = yearForTableString + 1;
+            stateOBJ['coal'].push(row.coal);
+            stateOBJ['natural_gas'].push(row.natural_gas);
+            stateOBJ['nuclear'].push(row.nuclear);
+            stateOBJ['petroleum'].push(row.petroleum);
+            stateOBJ['renewable'].push(row.renewable);
             var totalCountRow = row.coal + row.natural_gas + row.nuclear + row.petroleum + row.renewable
-            state[totalCountRow].push(totalCountRow);
+            stateOBJ['totalCountRow'].push(totalCountRow);
+            tableString = tableString + "<tr>" + "<td>" + yearForTableString + "</td>" + "<td>" + row.coal + "</td>"
+            + "<td>" + row.natural_gas + "</td>" + "<td>" + row.nuclear+"</td>" + "<td>" + row.petroleum + "</td>"
+            + "<td>" + row.renewable + "</td>" + "<td>"+totalCountRow+"</td>" + "</tr>"+"\n";
 
-            // coal_counts.push(row.coal);
-			// natural_gas_counts.push(row.natural_gas);
-			// nuclear_counts.push(row.nuclear);
-			// petroleum_counts.push(row.petroleum);
-            // renewable_counts.push(row.renewable);
-            // var totalCountRow = row.coal + row.natural_gas + row.nuclear + row.petroleum + row.renewable
-			// total_counts.push(totalCountRow);	
 		}, () => {
-		// Building up tableString
-		for(var i=0; i<coal_counts.length; i++) {
-			var year = i + 1960
-			tableString += "<tr>"+"<td>"+year+"</td>"+
-								  "<td>"+coal_counts[i]+"</td>"+
-								  "<td>"+natural_gas_counts[i]+"</td>"+
-								  "<td>"+nuclear_counts[i]+"</td>"+
-								  "<td>"+petroleum_counts[i]+"</td>"+
-								  "<td>"+renewable_counts[i]+"</td>"+
-								  "<td>"+total_counts[i]+"</td>"+"</tr>"+"\n";
-		}
-		response = response.replace("<!-- Data to be inserted here -->", tableString);
-		
-		// ?? format looks correct when template is printed but the graph isn't populating with data	
-        // Building variable replacement strings
-        //all caps to pop and so noticed, not to yell... 
-        //IDEA: MAKE A JSON OBJECT FOR THE STATE AND EACH ELEMENT INSIDE IS A LIST OF THE ENERGY TYPE WITH THE CONSUMPTION LOOK AT LINES 272, 291, 292 AND CONSOLE OUT OF 298
-        /*
-
-        var state_data = {coal:[],natural_gas:[],nuclear:[],petroleum:[],renewable:[]}
-
-
-        db each
-        state_data[energy type].push(rows[energy type from row])
-
-        after db each done
-        var stateEnergyString = "var coal_counts = " + JSON.stringify(jsonPerState[coal]);   <--- not too sure if can stringyify like this???
-        maybe stringfy full thing then pull out separately afterwards????
-
-
-        */
-		var stateString = "var state = " + state;
-		var coalString = "var coal_counts = " + "\"" + coal_counts + "\""; 
-		var naturalGasString = "var natural_gas_count = " + "[" + natural_gas_counts + "]";
-		var nuclearString = "var nuclear_counts = " + "[" + nuclear_counts + "]";
-		var petroleumString = "var petroleum_counts = " + "[" + petroleum_counts + "]";
-		var renewableString = "var renewable_counts = " + "[" + renewable_counts + "]";
-		
-		console.log(coalString);
-
-		// Replacing the strings with the data totals
-		response = response.replace("var state", stateString);
-		response = response.replace("var coal_counts", coalString);
+        
+        var stateString = "var state = " +"\""+ state+"\"";
+        var coalString = "var coal_counts = " + JSON.stringify(stateOBJ['coal']);
+		var naturalGasString = "var natural_gas_count = " + JSON.stringify(stateOBJ['natural_gas']);
+		var nuclearString = "var nuclear_counts = " + JSON.stringify(stateOBJ['nuclear']);
+		var petroleumString = "var petroleum_counts = " + JSON.stringify(stateOBJ['petroleum']);
+		var renewableString = "var renewable_counts = " + JSON.stringify(stateOBJ['renewable']);
+        
+        response = response.replace("var state", stateString);
+        response = response.replace("var coal_counts", coalString);
 		response = response.replace("var natural_gas_count", naturalGasString);
 		response = response.replace("var nuclear_counts", nuclearString);
 		response = response.replace("var petroleum_counts", petroleumString);
 		response = response.replace("var renewable_counts", renewableString);
-		
-		//console.log(response);
+        response = response.replace("<!-- Data to be inserted here -->", tableString);
 		
 		WriteHtml(res, response);		
 		});
@@ -322,7 +279,7 @@ app.get('/energy-type/:selected_energy_type', (req, res) => {
             var capitalizedEnergyType
             var consumptionSnapshotString = "<h2>"+capitalizedEnergyType+" "+"Consumption Snapshot</h2>";
             var titleEnergyTypeString = "<title>"+ "US" + " " + capitalizedEnergyType +" "+ "Energy Consumption" + "</title>"; 
-            console.log(energyCountsString);
+            //console.log(energyCountsString);
             //console.log("ConsumptionString :"+consumptionSnapshotString,"titleEnergyString: "+titleEnergyTypeString);
             response = response.replace("var energy_type", energyTypeString);
             response = response.replace("var energy_counts", energyCountsString);
