@@ -304,7 +304,7 @@ app.get('/energy-type/:selected_energy_type', (req, res) => {
                     tableString += "<td>" + jsonPerState[state][i] + "</td>";
                     yearTotal += jsonPerState[state][i];
                 }
-                tableString += "<ti>" + yearTotal + "</ti></tr>\n";
+                tableString += "<td>" + yearTotal + "</td></tr>\n";
                 yearTotal = 0;
             }
             response = response.replace("<!-- Data to be inserted here -->", tableString);
