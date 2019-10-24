@@ -59,13 +59,13 @@ app.get('/', (req, res) => {
         var petroleumTotal  = 0;
         var renewableTotal  = 0;
         var tableString= "";
-        db.each("SELECT * FROM Consumption WHERE year = 2017 ORDER BY year", (err, rows)=> {
-            tableString = tableString + "<tr>"+"<td>"+rows.state_abbreviation +"</td>"+"<td>"+rows.coal+"</td>"+"<td>"+rows.natural_gas+"</td>"+"<td>"+rows.nuclear+"</td>"+"<td>"+rows.petroleum+"</td>"+"<td>"+rows.renewable+"</td>"+"</tr>"+"\n";
-            naturalGasTotal = naturalGasTotal+rows.natural_gas;
-            nuclearTotal    = nuclearTotal+rows.nuclear;
-            petroleumTotal  = petroleumTotal+rows.petroleum;
-            renewableTotal  = renewableTotal+rows.renewable;
-            coalTotal       = coalTotal + rows.coal;
+        db.each("SELECT * FROM Consumption WHERE year = 2017 ORDER BY year", (err, row)=> {
+            tableString = tableString + "<tr>"+"<td>"+row.state_abbreviation +"</td>"+"<td>"+row.coal+"</td>"+"<td>"+row.natural_gas+"</td>"+"<td>"+row.nuclear+"</td>"+"<td>"+row.petroleum+"</td>"+"<td>"+row.renewable+"</td>"+"</tr>"+"\n";
+            naturalGasTotal = naturalGasTotal+row.natural_gas;
+            nuclearTotal    = nuclearTotal+row.nuclear;
+            petroleumTotal  = petroleumTotal+row.petroleum;
+            renewableTotal  = renewableTotal+row.renewable;
+            coalTotal       = coalTotal + row.coal;
         }, () => {
             var coalString = "var coal_count =" + coalTotal;
             var naturalGasString = "var natural_gas_count = " + naturalGasTotal;
@@ -103,7 +103,9 @@ app.get('/year/:selected_year', (req, res) => {
         db.each("SELECT * FROM Consumption WHERE year = ? ORDER BY year",[req.params.selected_year], (err, rows)=>{
             //console.log(rows);
             var tableTotalForStateRow = rows.coal+rows.natural_gas+rows.nuclear+rows.petroleum+rows.renewable;
-            tableString = tableString + "<tr>"+"<td>"+rows.state_abbreviation +"</td>"+"<td>"+rows.coal+"</td>"+"<td>"+rows.natural_gas+"</td>"+"<td>"+rows.nuclear+"</td>"+"<td>"+rows.petroleum+"</td>"+"<td>"+rows.renewable+"</td>"+"<td>"+tableTotalForStateRow+"</td>"+"</tr>"+"\n";
+            tableString = tableString + "<tr>"+"<td>"+rows.state_abbreviation +"</td>"+"<td>"+rows.coal+"</td>"+"<td>"
+            +rows.natural_gas+"</td>"+"<td>"+rows.nuclear+"</td>"+"<td>"+rows.petroleum+"</td>"+"<td>"+rows.renewable
+            +"</td>"+"<td>"+tableTotalForStateRow+"</td>"+"</tr>"+"\n";
             naturalGasTotal = naturalGasTotal+rows.natural_gas;
             nuclearTotal    = nuclearTotal+rows.nuclear;
             petroleumTotal  = petroleumTotal+rows.petroleum;
@@ -211,15 +213,24 @@ app.get('/state/:selected_state', (req, res) => {
 		var tableString = "";
 		// Getting data from database
         // Building arrays of consumption per year for each resource type
-        
+        var stateOBJ = {coal:[],natural_gas:[],nuclear:[],petroleum:[],renewable:[], totalCountRow:[] };
+
 		db.each("SELECT * FROM Consumption WHERE state_abbreviation=? ORDER BY Year", [state], (err, row) => {
-			coal_counts.push(row.coal);
-			natural_gas_counts.push(row.natural_gas);
-			nuclear_counts.push(row.nuclear);
-			petroleum_counts.push(row.petroleum);
-            renewable_counts.push(row.renewable);
+            stateOBJ[coal].push(row.coal);
+            stateOBJ[natural_gas].push(row.natural_gas);
+            stateOBJ[nuclear].push(row.nuclear);
+            state[petroleum].push(row.petroleum);
+            state[renewable].push(row.renewable);
             var totalCountRow = row.coal + row.natural_gas + row.nuclear + row.petroleum + row.renewable
-			total_counts.push(totalCountRow);	
+            state[totalCountRow].push(totalCountRow);
+
+            // coal_counts.push(row.coal);
+			// natural_gas_counts.push(row.natural_gas);
+			// nuclear_counts.push(row.nuclear);
+			// petroleum_counts.push(row.petroleum);
+            // renewable_counts.push(row.renewable);
+            // var totalCountRow = row.coal + row.natural_gas + row.nuclear + row.petroleum + row.renewable
+			// total_counts.push(totalCountRow);	
 		}, () => {
 		// Building up tableString
 		for(var i=0; i<coal_counts.length; i++) {
@@ -291,9 +302,9 @@ app.get('/energy-type/:selected_energy_type', (req, res) => {
             MS:[], MT:[], NC:[], ND:[], NE:[], NH:[], NJ:[], NM:[], NV:[],
             NY:[], OH:[], OK:[], OR:[], PA:[], RI:[], SC:[], SD:[], TN:[],
             TX:[], UT:[], VA:[], VT:[], WA:[], WI:[], WV:[], WY:[]};
-        db.each("SELECT * FROM Consumption ORDER BY year", (err,rows)=>{
+        db.each("SELECT * FROM Consumption ORDER BY year", (err,row)=>{
             //console.log(rows.year, rows.state_abbreviation, rows[req.params.selected_energy_type]);
-            jsonPerState[rows.state_abbreviation].push(rows[req.params.selected_energy_type]);
+            jsonPerState[row.state_abbreviation].push(row[req.params.selected_energy_type]);
         }, () => {
             //console.log(jsonPerState);
             if(energyType=="natural_gas"){
