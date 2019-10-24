@@ -1,6 +1,1 @@
 Bugs to fix:
-Next state and previous state button mapping on energy per state
-Error handiling when trying to manually input bad state into url
-Per state data not showing up on graph correctly
-CHECK ALL BUTTONS
-Table string building per energy type

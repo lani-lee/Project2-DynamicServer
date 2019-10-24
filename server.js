@@ -92,6 +92,15 @@ app.get('/', (req, res) => {
 
 // GET request handler for '/year/*'
 app.get('/year/:selected_year', (req, res) => {
+    var year = req.params.selected_year;
+    console.log(year);
+    // Writes 404 error page if selected year is not between 1960 and 2017, inclusive
+    if (year < 1960 || year > 2017) {
+        res.writeHead(404, {'Content-Type': 'text/plain'});
+        res.write('Error: no data for year ' + year);
+        res.end();
+    }
+    
     ReadFile(path.join(template_dir, 'year.html')).then((template) => {
         let response = template;
         // modify `response` here
@@ -102,7 +111,7 @@ app.get('/year/:selected_year', (req, res) => {
         var petroleumTotal  = 0;
         var renewableTotal  = 0;
         var tableString= "";
-        db.each("SELECT * FROM Consumption WHERE year = ? ORDER BY year",[req.params.selected_year], (err, row)=>{
+        db.each("SELECT * FROM Consumption WHERE year = ? ORDER BY year", [year], (err, row)=>{
             //console.log(rows);
             var tableTotalForStateRow = row.coal+row.natural_gas+row.nuclear+row.petroleum+row.renewable;
             tableString = tableString + "<tr>"+"<td>"+row.state_abbreviation +"</td>"+"<td>"+row.coal+"</td>"+"<td>"
@@ -121,14 +130,14 @@ app.get('/year/:selected_year', (req, res) => {
             // console.log(nuclearTotal + " nuclear total");
             // console.log(petroleumTotal + " petroleum total");
             // console.log(renewableTotal + " renewableTotal");
-            var yearString = "var year = " + req.params.selected_year;
+            var yearString = "var year = " + year;
             var coalString = "var coal_count =" + coalTotal;
             var naturalGasString = "var natural_gas_count = " + naturalGasTotal;
             var nuclearString = "var nuclear_count = " + nuclearTotal;
             var petroleumString = "var petroleum_count = " + petroleumTotal;
             var renewableString = "var renewable_count = " + renewableTotal;
-            var snapshotString = req.params.selected_year + " " +"National Snapshot"
-            var titleString = "<title>"+req.params.selected_year + " " + "US Energy Consumption"+"</title";
+            var snapshotString = year + " " +"National Snapshot"
+            var titleString = "<title>"+ year + " " + "US Energy Consumption"+"</title";
             //Replacing the strings with the data totals
             response = response.replace("var year", yearString);
             response = response.replace("var coal_count", coalString);
@@ -142,7 +151,7 @@ app.get('/year/:selected_year', (req, res) => {
             response = response.replace("<!-- Data to be inserted here -->", tableString);
             response = response.replace("<title>US Energy Consumption</title>",titleString);
             //Button Features
-            var currYear = parseInt(req.params.selected_year);
+            var currYear = parseInt(year);
             var prevYear = currYear - 1;
             var nextYear = currYear + 1;
             if (currYear == 1960) {
@@ -151,8 +160,8 @@ app.get('/year/:selected_year', (req, res) => {
             else if (currYear == 2017) {
                 nextYear = 2017;
             }
-            response = response.replace("href=\"\">Prev", "href=\"" + "/" + "year" + "/" + prevYear.toString() + "\">Prev");
-            response = response.replace("href=\"\">Next", "href=\"" + "/" + "year" + "/" + nextYear.toString() + "\">Next");
+            response = response.replace("href=\"\">Prev", "href=\"/year/" + prevYear + "\">Prev");
+            response = response.replace("href=\"\">Next", "href=\"/year/" + nextYear + "\">Next");
             
             WriteHtml(res, response);
         });
@@ -164,11 +173,21 @@ app.get('/year/:selected_year', (req, res) => {
 
 // GET request handler for '/state/*'
 app.get('/state/:selected_state', (req, res) => {
+    var state = req.params.selected_state;
+    var states = ['AK', 'AL', 'AR', 'AZ', 'CA', 'CO', 'CT', 'DC', 'DE', 'FL', 'GA', 
+						  'HI', 'IA', 'ID', 'IL', 'IN', 'KS', 'KY', 'LA', 'MA', 'MD', 'ME',
+						  'MI', 'MN', 'MO', 'MS', 'MT', 'NC', 'ND', 'NE', 'NH', 'NJ', 'NM', 
+						  'NV', 'NY', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 
+						  'UT', 'VA', 'VT', 'WA', 'WI', 'WV', 'WY'];
+    // Writes 404 error page if selected state is not a valid state
+    if (!(state in states)) {
+        res.writeHead(404, {'Content-Type': 'text/plain'});
+        res.write('Error: no data for state ' + state);
+        res.end();
+    }
+    
     ReadFile(path.join(template_dir, 'state.html')).then((template) => {
         let response = template;
-		var state = req.params.selected_state;
-        // modify `response` here
-
 		db.get("SELECT * FROM States WHERE state_abbreviation=?",[state], (err,row) => {
 			var fullStateName = row.state_name;
 			// replacing the title and h2 header with the abbreviated and full state name
@@ -177,11 +196,7 @@ app.get('/state/:selected_state', (req, res) => {
 			var h2String =  "<h2>" + fullStateName + " Yearly Snapshot</h2>"
 			response = response.replace("<h2>Yearly Snapshot</h2>", h2String);
 			// linking the prev and next state buttons
-			var states = ['AK', 'AL', 'AR', 'AZ', 'CA', 'CO', 'CT', 'DC', 'DE', 'FL', 'GA', 
-						  'HI', 'IA', 'ID', 'IL', 'IN', 'KS', 'KY', 'LA', 'MA', 'MD', 'ME',
-						  'MI', 'MN', 'MO', 'MS', 'MT', 'NC', 'ND', 'NE', 'NH', 'NJ', 'NM', 
-						  'NV', 'NY', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 
-						  'UT', 'VA', 'VT', 'WA', 'WI', 'WV', 'WY'];
+			
 			var prevLink;
 			var nextLink;
 			if(state == "AK") {
@@ -196,8 +211,8 @@ app.get('/state/:selected_state', (req, res) => {
 				prevLink = states[states.indexOf(state)-1];
 				nextLink = states[states.indexOf(state)+1];
 			}
-			response = response.replace("<a class=\"prev_next\" href=\"\">XX</a> <!-- change XX to prev", "<a class=\"prev_next\" href=\"" + "/" + "state" + "/" + prevLink + "\">" + prevLink + "</a> <!-- change XX to prev");
-			response = response.replace("<a class=\"prev_next\" href=\"\">XX</a> <!-- change XX to next", "<a class=\"prev_next\" href=\"" + "/" + "state" + "/" + nextLink + "\">" + nextLink + "</a> <!-- change XX to next");
+			response = response.replace("<a class=\"prev_next\" href=\"\">XX</a> <!-- change XX to prev", "<a class=\"prev_next\" href=\"/state/" + prevLink + "\">" + prevLink + "</a> <!-- change XX to prev");
+			response = response.replace("<a class=\"prev_next\" href=\"\">XX</a> <!-- change XX to next", "<a class=\"prev_next\" href=\"/state/" + nextLink + "\">" + nextLink + "</a> <!-- change XX to next");
         });
         
         // Replace image and alt
@@ -248,9 +263,18 @@ app.get('/state/:selected_state', (req, res) => {
 
 // GET request handler for '/energy-type/*'
 app.get('/energy-type/:selected_energy_type', (req, res) => {
+    var energyType = req.params.selected_energy_type;
+    var energyTypes = ["coal", "natural_gas", "nuclear", "petroleum", "renewable"];
+    // Writes 404 error page if selected energy type is not a valid energy type
+    if (!(energyType in energyTypes)) {
+        res.writeHead(404, {'Content-Type': 'text/plain'});
+        res.write('Error: no data for energy type ' + evergyType);
+        res.end();
+    }
+    
     ReadFile(path.join(template_dir, 'energy.html')).then((template) => {
         let response = template;
-        var energyType = req.params.selected_energy_type;
+        
         //console.log(req.params);
         //console.log(req.params.selected_energy_type);
         var jsonPerState={AK:[], AL:[], AR:[], AZ:[], CA:[], CO:[], CT:[], 
@@ -276,7 +300,7 @@ app.get('/energy-type/:selected_energy_type', (req, res) => {
             var energyCountsString = "var energy_counts = " + JSON.stringify(jsonPerState);
             //console.log("selected energy type: "+energyType);
             // Handling capitalization of the energy type
-            var capitalizedEnergyType
+            var capitalizedEnergyType;
             var consumptionSnapshotString = "<h2>"+capitalizedEnergyType+" "+"Consumption Snapshot</h2>";
             var titleEnergyTypeString = "<title>"+ "US" + " " + capitalizedEnergyType +" "+ "Energy Consumption" + "</title>"; 
             //console.log(energyCountsString);
@@ -291,8 +315,15 @@ app.get('/energy-type/:selected_energy_type', (req, res) => {
             
             //IMAGE Replacement
             response = response.replace("<img src=\"/images/noimage.jpg\" alt=\"No Image\"", "<img src=\"" + path.join("a", "images", energyType + ".jpg").substring(1) + "\" alt=\"Image of " + capitalizedEnergyType + "\"");
-            //for the buttons, could have a dictionary or an array where it wraps around where it matches from the capitalizedEnergyType
-            //use hoemwork one for the different types of content types as way to figure out
+            
+            // Button links
+            
+            var capitalizedEnergyTypes = ["Coal", "Natural Gas", "Nuclear", "Petroleum", "Renewable"];
+            // prevLink and nextLink contain the index number of the previous or next energy type (wraps around)
+            var prevLink = (energyTypes.indexOf(energyType) + 4) % 5;
+            var nextLink = (energyTypes.indexOf(energyType) + 1) % 5;
+            response = response.replace("<a class=\"prev_next\" href=\"\">XX</a> <!-- change XX to prev", "<a class=\"prev_next\" href=\"/energy-type/" + energyTypes[prevLink] + "\">" + capitalizedEnergyTypes[prevLink] + "</a> <!-- change XX to prev");
+            response = response.replace("<a class=\"prev_next\" href=\"\">XX</a> <!-- change XX to next", "<a class=\"prev_next\" href=\"/energy-type/" + energyTypes[nextLink] + "\">" + capitalizedEnergyTypes[nextLink] + "</a> <!-- change XX to next");
             
             // Building table of total usage of resource per year per state
             var tableString = "";
