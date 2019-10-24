@@ -60,7 +60,9 @@ app.get('/', (req, res) => {
         var renewableTotal  = 0;
         var tableString= "";
         db.each("SELECT * FROM Consumption WHERE year = 2017 ORDER BY year", (err, row)=> {
-            tableString = tableString + "<tr>"+"<td>"+row.state_abbreviation +"</td>"+"<td>"+row.coal+"</td>"+"<td>"+row.natural_gas+"</td>"+"<td>"+row.nuclear+"</td>"+"<td>"+row.petroleum+"</td>"+"<td>"+row.renewable+"</td>"+"</tr>"+"\n";
+            tableString = tableString + "<tr>"+"<td>"+row.state_abbreviation +"</td>"+"<td>"+row.coal+"</td>"
+            +"<td>"+row.natural_gas+"</td>"+"<td>"+row.nuclear+"</td>"+"<td>"+row.petroleum+"</td>"+"<td>"
+            +row.renewable+"</td>"+"</tr>"+"\n";
             naturalGasTotal = naturalGasTotal+row.natural_gas;
             nuclearTotal    = nuclearTotal+row.nuclear;
             petroleumTotal  = petroleumTotal+row.petroleum;
