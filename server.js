@@ -210,7 +210,6 @@ app.get('/state/:selected_state', (req, res) => {
         var stateOBJ = {coal:[],natural_gas:[],nuclear:[],petroleum:[],renewable:[], totalCountRow:[]};
         var yearForTableString = 1960;
 		db.each("SELECT * FROM Consumption WHERE state_abbreviation=? ORDER BY Year", [state], (err, row) => {
-            yearForTableString = yearForTableString + 1;
             stateOBJ['coal'].push(row.coal);
             stateOBJ['natural_gas'].push(row.natural_gas);
             stateOBJ['nuclear'].push(row.nuclear);
@@ -222,15 +221,16 @@ app.get('/state/:selected_state', (req, res) => {
             + "<td>" + row.natural_gas + "</td>" + "<td>" + row.nuclear+"</td>" + "<td>" + row.petroleum + "</td>"
             + "<td>" + row.renewable + "</td>" + "<td>"+totalCountRow+"</td>" + "</tr>"+"\n";
 
+            yearForTableString = yearForTableString + 1; 
 		}, () => {
         
         var stateString = "var state = " +"\""+ state+"\"";
         var coalString = "var coal_counts = " + JSON.stringify(stateOBJ['coal']);
-		var naturalGasString = "var natural_gas_count = " + JSON.stringify(stateOBJ['natural_gas']);
+		var naturalGasString = "var natural_gas_counts = " + JSON.stringify(stateOBJ['natural_gas']);
 		var nuclearString = "var nuclear_counts = " + JSON.stringify(stateOBJ['nuclear']);
 		var petroleumString = "var petroleum_counts = " + JSON.stringify(stateOBJ['petroleum']);
 		var renewableString = "var renewable_counts = " + JSON.stringify(stateOBJ['renewable']);
-        
+        console.log(naturalGasString);
         response = response.replace("var state", stateString);
         response = response.replace("var coal_counts", coalString);
 		response = response.replace("var natural_gas_count", naturalGasString);
