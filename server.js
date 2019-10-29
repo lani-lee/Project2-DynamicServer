@@ -21,14 +21,18 @@ var db = new sqlite3.Database(db_filename, sqlite3.OPEN_READONLY, (err) => {
     }
     else {
         console.log('Now connected to ' + db_filename);
+        //Testsql()
     }
 });
+
+
+app.use(express.static(public_dir));
+
 
 // GET request handler for '/'
 app.get('/', (req, res) => {
     ReadFile(path.join(template_dir, 'index.html')).then((template) => {
         let response = template;
-        
         // modify `response` here
         var coalTotal       = 0;
         var naturalGasTotal = 0;
@@ -46,7 +50,7 @@ app.get('/', (req, res) => {
             renewableTotal  = renewableTotal+row.renewable;
             coalTotal       = coalTotal + row.coal;
         }, () => {
-            var coalString = "var coal_count =" + coalTotal;
+            var coalString = "var coal_count = " + coalTotal;
             var naturalGasString = "var natural_gas_count = " + naturalGasTotal;
             var nuclearString = "var nuclear_count = " + nuclearTotal;
             var petroleumString = "var petroleum_count = " + petroleumTotal;
@@ -79,16 +83,16 @@ app.get('/year/:selected_year', (req, res) => {
     
     ReadFile(path.join(template_dir, 'year.html')).then((template) => {
         let response = template;
-
         // modify `response` here
+        //inject content for the year etc
         var coalTotal       = 0;
         var naturalGasTotal = 0;
         var nuclearTotal    = 0;
         var petroleumTotal  = 0;
         var renewableTotal  = 0;
         var tableString= "";
-
         db.each("SELECT * FROM Consumption WHERE year = ? ORDER BY year", [year], (err, row)=>{
+
             var tableTotalForStateRow = row.coal+row.natural_gas+row.nuclear+row.petroleum+row.renewable;
             tableString = tableString + "<tr>"+"<td>"+row.state_abbreviation +"</td>"+"<td>"+row.coal+"</td>"+"<td>"
             +row.natural_gas+"</td>"+"<td>"+row.nuclear+"</td>"+"<td>"+row.petroleum+"</td>"+"<td>"+row.renewable
@@ -99,14 +103,15 @@ app.get('/year/:selected_year', (req, res) => {
             renewableTotal  = renewableTotal+row.renewable;
             coalTotal       = coalTotal + row.coal;
         }, () => {
+
             var yearString = "var year = " + year;
-            var coalString = "var coal_count =" + coalTotal;
+            var coalString = "var coal_count = " + coalTotal;
             var naturalGasString = "var natural_gas_count = " + naturalGasTotal;
             var nuclearString = "var nuclear_count = " + nuclearTotal;
             var petroleumString = "var petroleum_count = " + petroleumTotal;
             var renewableString = "var renewable_count = " + renewableTotal;
             var snapshotString = year + " " +"National Snapshot"
-            var titleString = "<title>"+ year + " " + "US Energy Consumption"+"</title";
+            var titleString = "<title>"+ year + " " + "US Energy Consumption"+"</title>";
             //Replacing the strings with the data totals
             response = response.replace("var year", yearString);
             response = response.replace("var coal_count", coalString);
@@ -149,81 +154,88 @@ app.get('/state/:selected_state', (req, res) => {
 						  'NV', 'NY', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 
 						  'UT', 'VA', 'VT', 'WA', 'WI', 'WV', 'WY'];
     // Writes 404 error page if selected state is not a valid state
+    console.log("\""+ state+"\"");
+    console.log(typeof(state));
     if (!(state in states)) {
         res.writeHead(404, {'Content-Type': 'text/plain'});
         res.write('Error: no data for state ' + state);
         res.end();
-    }
+    }else{
+        ReadFile(path.join(template_dir, 'state.html')).then((template) => {
+            let response = template;
     
-    ReadFile(path.join(template_dir, 'state.html')).then((template) => {
-        let response = template;
-
-		db.get("SELECT * FROM States WHERE state_abbreviation=?",[state], (err,row) => {
-			var fullStateName = row.state_name;
-			// replacing the title and h2 header with the abbreviated and full state name
-			var titleString = "<title>" + state + " Energy Consumption</title>";
-			response = response.replace("<title>US Energy Consumption</title>", titleString);
-			var h2String =  "<h2>" + fullStateName + " Yearly Snapshot</h2>"
-			response = response.replace("<h2>Yearly Snapshot</h2>", h2String);
-			// linking the prev and next state buttons
-			var prevLink;
-			var nextLink;
-			if(state == "AK") {
-				prevLink = "WY";
-				nextLink = "AL";
-			}
-			else if (state == "WY") {
-				prevLink = "WV";
-				nextLink = "AK";
-			}
-			else {
-				prevLink = states[states.indexOf(state)-1];
-				nextLink = states[states.indexOf(state)+1];
-			}
-			response = response.replace("<a class=\"prev_next\" href=\"\">XX</a> <!-- change XX to prev", "<a class=\"prev_next\" href=\"/state/" + prevLink + "\">" + prevLink + "</a> <!-- change XX to prev");
-			response = response.replace("<a class=\"prev_next\" href=\"\">XX</a> <!-- change XX to next", "<a class=\"prev_next\" href=\"/state/" + nextLink + "\">" + nextLink + "</a> <!-- change XX to next");
+            db.get("SELECT * FROM States WHERE state_abbreviation=?",[state], (err,row) => {
+                var fullStateName = row.state_name;
+                // replacing the title and h2 header with the abbreviated and full state name
+                var titleString = "<title>" + state + " Energy Consumption</title>";
+                response = response.replace("<title>US Energy Consumption</title>", titleString);
+                var h2String =  "<h2>" + fullStateName + " Yearly Snapshot</h2>"
+                response = response.replace("<h2>Yearly Snapshot</h2>", h2String);
+                // linking the prev and next state buttons
+                
+                var prevLink;
+                var nextLink;
+                if(state == "AK") {
+                    prevLink = "WY";
+                    nextLink = "AL";
+                }
+                else if (state == "WY") {
+                    prevLink = "WV";
+                    nextLink = "AK";
+                }
+                else {
+                    prevLink = states[states.indexOf(state)-1];
+                    nextLink = states[states.indexOf(state)+1];
+                }
+                response = response.replace("<a class=\"prev_next\" href=\"\">XX</a> <!-- change XX to prev", "<a class=\"prev_next\" href=\"/state/" + prevLink + "\">" + prevLink + "</a> <!-- change XX to prev");
+                response = response.replace("<a class=\"prev_next\" href=\"\">XX</a> <!-- change XX to next", "<a class=\"prev_next\" href=\"/state/" + nextLink + "\">" + nextLink + "</a> <!-- change XX to next");
+            });
+            
+            // Replace image and alt
+            response = response.replace("<img src=\"/images/noimage.jpg\" alt=\"No Image\"", "<img src=\"" + path.join("a", "images", state + ".jpg").substring(1) + "\" alt=\"Flag of " + state + "\"");
+            
+            
+            var tableString = "";
+            // Getting data from database
+            // Building arrays of consumption per year for each resource type
+            var stateOBJ = {coal:[],natural_gas:[],nuclear:[],petroleum:[],renewable:[], totalCountRow:[]};
+            var yearForTableString = 1960;
+            db.each("SELECT * FROM Consumption WHERE state_abbreviation=? ORDER BY Year", [state], (err, row) => {
+                stateOBJ['coal'].push(row.coal);
+                stateOBJ['natural_gas'].push(row.natural_gas);
+                stateOBJ['nuclear'].push(row.nuclear);
+                stateOBJ['petroleum'].push(row.petroleum);
+                stateOBJ['renewable'].push(row.renewable);
+                var totalCountRow = row.coal + row.natural_gas + row.nuclear + row.petroleum + row.renewable
+                stateOBJ['totalCountRow'].push(totalCountRow);
+                tableString = tableString + "<tr>" + "<td>" + yearForTableString + "</td>" + "<td>" + row.coal + "</td>"
+                + "<td>" + row.natural_gas + "</td>" + "<td>" + row.nuclear+"</td>" + "<td>" + row.petroleum + "</td>"
+                + "<td>" + row.renewable + "</td>" + "<td>"+totalCountRow+"</td>" + "</tr>"+"\n";
+    
+                yearForTableString = yearForTableString + 1; 
+            }, () => {
+            
+            var stateString = "var state = " +"\""+ state+"\"";
+            var coalString = "var coal_counts = " + JSON.stringify(stateOBJ['coal']);
+            var naturalGasString = "var natural_gas_counts = " + JSON.stringify(stateOBJ['natural_gas']);
+            var nuclearString = "var nuclear_counts = " + JSON.stringify(stateOBJ['nuclear']);
+            var petroleumString = "var petroleum_counts = " + JSON.stringify(stateOBJ['petroleum']);
+            var renewableString = "var renewable_counts = " + JSON.stringify(stateOBJ['renewable']);
+            response = response.replace("var state", stateString);
+            response = response.replace("var coal_counts", coalString);
+            response = response.replace("var natural_gas_count", naturalGasString);
+            response = response.replace("var nuclear_counts", nuclearString);
+            response = response.replace("var petroleum_counts", petroleumString);
+            response = response.replace("var renewable_counts", renewableString);
+            response = response.replace("<!-- Data to be inserted here -->", tableString);
+            WriteHtml(res, response);		
         });
         
-        // Replace image and alt
-        response = response.replace("<img src=\"/images/noimage.jpg\" alt=\"No Image\"", "<img src=\"" + path.join("a", "images", state + ".jpg").substring(1) + "\" alt=\"Flag of " + state + "\"");
-        
-        var tableString = "";
-		// Getting data from database
-        // Building arrays of consumption per year for each resource type
-        var stateOBJ = {coal:[],natural_gas:[],nuclear:[],petroleum:[],renewable:[], totalCountRow:[]};
-        var yearForTableString = 1960;
-		db.each("SELECT * FROM Consumption WHERE state_abbreviation=? ORDER BY Year", [state], (err, row) => {
-            stateOBJ['coal'].push(row.coal);
-            stateOBJ['natural_gas'].push(row.natural_gas);
-            stateOBJ['nuclear'].push(row.nuclear);
-            stateOBJ['petroleum'].push(row.petroleum);
-            stateOBJ['renewable'].push(row.renewable);
-            var totalCountRow = row.coal + row.natural_gas + row.nuclear + row.petroleum + row.renewable
-            stateOBJ['totalCountRow'].push(totalCountRow);
-            tableString = tableString + "<tr>" + "<td>" + yearForTableString + "</td>" + "<td>" + row.coal + "</td>"
-            + "<td>" + row.natural_gas + "</td>" + "<td>" + row.nuclear+"</td>" + "<td>" + row.petroleum + "</td>"
-            + "<td>" + row.renewable + "</td>" + "<td>"+totalCountRow+"</td>" + "</tr>"+"\n";
-            yearForTableString = yearForTableString + 1; 
-		}, () => {
-        var stateString = "var state = " +"\""+ state+"\"";
-        var coalString = "var coal_counts = " + JSON.stringify(stateOBJ['coal']);
-		var naturalGasString = "var natural_gas_counts = " + JSON.stringify(stateOBJ['natural_gas']);
-		var nuclearString = "var nuclear_counts = " + JSON.stringify(stateOBJ['nuclear']);
-		var petroleumString = "var petroleum_counts = " + JSON.stringify(stateOBJ['petroleum']);
-		var renewableString = "var renewable_counts = " + JSON.stringify(stateOBJ['renewable']);
-        response = response.replace("var state", stateString);
-        response = response.replace("var coal_counts", coalString);
-		response = response.replace("var natural_gas_count", naturalGasString);
-		response = response.replace("var nuclear_counts", nuclearString);
-		response = response.replace("var petroleum_counts", petroleumString);
-		response = response.replace("var renewable_counts", renewableString);
-        response = response.replace("<!-- Data to be inserted here -->", tableString);
-		
-		WriteHtml(res, response);		
-		});
     }).catch((err) => {
         Write404Error(res);
     });
+    }
+
 });
 
 // GET request handler for '/energy-type/*'
@@ -267,6 +279,7 @@ app.get('/energy-type/:selected_energy_type', (req, res) => {
             response = response.replace("var energy_counts", energyCountsString);
             response = response.replace("<title>US Energy Consumption</title>", titleEnergyTypeString);
             response = response.replace("<h2>Consumption Snapshot</h2>", consumptionSnapshotString);
+
             
             //IMAGE Replacement
             response = response.replace("<img src=\"/images/noimage.jpg\" alt=\"No Image\"", "<img src=\"" + path.join("a", "images", energyType + ".jpg").substring(1) + "\" alt=\"Image of " + capitalizedEnergyType + "\"");
@@ -294,8 +307,9 @@ app.get('/energy-type/:selected_energy_type', (req, res) => {
                 yearTotal = 0;
             }
             response = response.replace("<!-- Data to be inserted here -->", tableString);
-
+            
             WriteHtml(res, response);
+
             });        
     }).catch((err) => {
         Write404Error(res);
@@ -326,5 +340,6 @@ function WriteHtml(res, html) {
     res.write(html);
     res.end();
 }
+
 
 var server = app.listen(port);
