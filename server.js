@@ -24,11 +24,11 @@ var db = new sqlite3.Database(db_filename, sqlite3.OPEN_READONLY, (err) => {
     }
 });
 
-
 // GET request handler for '/'
 app.get('/', (req, res) => {
     ReadFile(path.join(template_dir, 'index.html')).then((template) => {
         let response = template;
+        
         // modify `response` here
         var coalTotal       = 0;
         var naturalGasTotal = 0;
@@ -79,6 +79,7 @@ app.get('/year/:selected_year', (req, res) => {
     
     ReadFile(path.join(template_dir, 'year.html')).then((template) => {
         let response = template;
+
         // modify `response` here
         var coalTotal       = 0;
         var naturalGasTotal = 0;
@@ -86,6 +87,7 @@ app.get('/year/:selected_year', (req, res) => {
         var petroleumTotal  = 0;
         var renewableTotal  = 0;
         var tableString= "";
+
         db.each("SELECT * FROM Consumption WHERE year = ? ORDER BY year", [year], (err, row)=>{
             var tableTotalForStateRow = row.coal+row.natural_gas+row.nuclear+row.petroleum+row.renewable;
             tableString = tableString + "<tr>"+"<td>"+row.state_abbreviation +"</td>"+"<td>"+row.coal+"</td>"+"<td>"
@@ -155,6 +157,7 @@ app.get('/state/:selected_state', (req, res) => {
     
     ReadFile(path.join(template_dir, 'state.html')).then((template) => {
         let response = template;
+
 		db.get("SELECT * FROM States WHERE state_abbreviation=?",[state], (err,row) => {
 			var fullStateName = row.state_name;
 			// replacing the title and h2 header with the abbreviated and full state name
@@ -163,7 +166,6 @@ app.get('/state/:selected_state', (req, res) => {
 			var h2String =  "<h2>" + fullStateName + " Yearly Snapshot</h2>"
 			response = response.replace("<h2>Yearly Snapshot</h2>", h2String);
 			// linking the prev and next state buttons
-			
 			var prevLink;
 			var nextLink;
 			if(state == "AK") {
@@ -238,7 +240,6 @@ app.get('/energy-type/:selected_energy_type', (req, res) => {
     ReadFile(path.join(template_dir, 'energy.html')).then((template) => {
         let response = template;
         
-
         var jsonPerState={AK:[], AL:[], AR:[], AZ:[], CA:[], CO:[], CT:[], 
             DC:[], DE:[], FL:[], GA:[], HI:[], IA:[], ID:[], IL:[], IN:[], 
             KS:[], KY:[], LA:[], MA:[], MD:[], ME:[], MI:[], MN:[], MO:[],
@@ -325,6 +326,5 @@ function WriteHtml(res, html) {
     res.write(html);
     res.end();
 }
-
 
 var server = app.listen(port);
