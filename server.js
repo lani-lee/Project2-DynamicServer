@@ -21,32 +21,9 @@ var db = new sqlite3.Database(db_filename, sqlite3.OPEN_READONLY, (err) => {
     }
     else {
         console.log('Now connected to ' + db_filename);
-        //Testsql()
     }
 });
-// database command stuff to pull data
-//SELECT column FROM table WHERE column <op> value ORDER BY column
-//ex: SELECT * FROM Consumption WHERE state_abreviation = 'MN' ORDER BY year
-//use database all not many callback functions, but could have individual ones
-//.tables lists tables
-//PRAGMA table_info(table_name) Lists columns for a table
-//database wiki: https://github.com/mapbox/node-sqlite3/wiki/API#databaseallsql-param--callback
-// pulling images fro here: https://www.pexels.com
 
-app.use(express.static(public_dir));
-/*
-function Testsql(){
-    //db.all("SELECT * FROM Consumption", (err, rows) =>{
-    // db.each("SELECT * FROM Consumption WHERE state_abbreviation = ? ORDER BY year",['MN'], (err, rows)=>{
-        
-    //     console.log(rows)
-    // });
-
-    db.each("SELECT * FROM Consumption WHERE year = ? ORDER BY year",['2014'], (err, rows)=>{
-        console.log(rows)
-    })
-}
-*/
 
 // GET request handler for '/'
 app.get('/', (req, res) => {
@@ -93,7 +70,6 @@ app.get('/', (req, res) => {
 // GET request handler for '/year/*'
 app.get('/year/:selected_year', (req, res) => {
     var year = req.params.selected_year;
-    console.log(year);
     // Writes 404 error page if selected year is not between 1960 and 2017, inclusive
     if (year < 1960 || year > 2017) {
         res.writeHead(404, {'Content-Type': 'text/plain'});
@@ -104,7 +80,6 @@ app.get('/year/:selected_year', (req, res) => {
     ReadFile(path.join(template_dir, 'year.html')).then((template) => {
         let response = template;
         // modify `response` here
-        //inject content for the year etc
         var coalTotal       = 0;
         var naturalGasTotal = 0;
         var nuclearTotal    = 0;
@@ -112,7 +87,6 @@ app.get('/year/:selected_year', (req, res) => {
         var renewableTotal  = 0;
         var tableString= "";
         db.each("SELECT * FROM Consumption WHERE year = ? ORDER BY year", [year], (err, row)=>{
-            //console.log(rows);
             var tableTotalForStateRow = row.coal+row.natural_gas+row.nuclear+row.petroleum+row.renewable;
             tableString = tableString + "<tr>"+"<td>"+row.state_abbreviation +"</td>"+"<td>"+row.coal+"</td>"+"<td>"
             +row.natural_gas+"</td>"+"<td>"+row.nuclear+"</td>"+"<td>"+row.petroleum+"</td>"+"<td>"+row.renewable
@@ -122,14 +96,7 @@ app.get('/year/:selected_year', (req, res) => {
             petroleumTotal  = petroleumTotal+row.petroleum;
             renewableTotal  = renewableTotal+row.renewable;
             coalTotal       = coalTotal + row.coal;
-            //console.log(rows.coal + " dis is the individual print")
         }, () => {
-            //testing to make sure totals added correctly.
-            // console.log(coalTotal + " coal total");
-            // console.log(naturalGasTotal + " Natural Gas Total");
-            // console.log(nuclearTotal + " nuclear total");
-            // console.log(petroleumTotal + " petroleum total");
-            // console.log(renewableTotal + " renewableTotal");
             var yearString = "var year = " + year;
             var coalString = "var coal_count =" + coalTotal;
             var naturalGasString = "var natural_gas_count = " + naturalGasTotal;
@@ -218,7 +185,6 @@ app.get('/state/:selected_state', (req, res) => {
         // Replace image and alt
         response = response.replace("<img src=\"/images/noimage.jpg\" alt=\"No Image\"", "<img src=\"" + path.join("a", "images", state + ".jpg").substring(1) + "\" alt=\"Flag of " + state + "\"");
         
-        
         var tableString = "";
 		// Getting data from database
         // Building arrays of consumption per year for each resource type
@@ -235,17 +201,14 @@ app.get('/state/:selected_state', (req, res) => {
             tableString = tableString + "<tr>" + "<td>" + yearForTableString + "</td>" + "<td>" + row.coal + "</td>"
             + "<td>" + row.natural_gas + "</td>" + "<td>" + row.nuclear+"</td>" + "<td>" + row.petroleum + "</td>"
             + "<td>" + row.renewable + "</td>" + "<td>"+totalCountRow+"</td>" + "</tr>"+"\n";
-
             yearForTableString = yearForTableString + 1; 
 		}, () => {
-        
         var stateString = "var state = " +"\""+ state+"\"";
         var coalString = "var coal_counts = " + JSON.stringify(stateOBJ['coal']);
 		var naturalGasString = "var natural_gas_counts = " + JSON.stringify(stateOBJ['natural_gas']);
 		var nuclearString = "var nuclear_counts = " + JSON.stringify(stateOBJ['nuclear']);
 		var petroleumString = "var petroleum_counts = " + JSON.stringify(stateOBJ['petroleum']);
 		var renewableString = "var renewable_counts = " + JSON.stringify(stateOBJ['renewable']);
-        console.log(naturalGasString);
         response = response.replace("var state", stateString);
         response = response.replace("var coal_counts", coalString);
 		response = response.replace("var natural_gas_count", naturalGasString);
@@ -275,8 +238,7 @@ app.get('/energy-type/:selected_energy_type', (req, res) => {
     ReadFile(path.join(template_dir, 'energy.html')).then((template) => {
         let response = template;
         
-        //console.log(req.params);
-        //console.log(req.params.selected_energy_type);
+
         var jsonPerState={AK:[], AL:[], AR:[], AZ:[], CA:[], CO:[], CT:[], 
             DC:[], DE:[], FL:[], GA:[], HI:[], IA:[], ID:[], IL:[], IN:[], 
             KS:[], KY:[], LA:[], MA:[], MD:[], ME:[], MI:[], MN:[], MO:[],
@@ -284,10 +246,8 @@ app.get('/energy-type/:selected_energy_type', (req, res) => {
             NY:[], OH:[], OK:[], OR:[], PA:[], RI:[], SC:[], SD:[], TN:[],
             TX:[], UT:[], VA:[], VT:[], WA:[], WI:[], WV:[], WY:[]};
         db.each("SELECT * FROM Consumption ORDER BY year", (err,row)=>{
-            //console.log(rows.year, rows.state_abbreviation, rows[req.params.selected_energy_type]);
             jsonPerState[row.state_abbreviation].push(row[req.params.selected_energy_type]);
         }, () => {
-            //console.log(jsonPerState);
             if(energyType=="natural_gas"){
                 var energyTypeSplit = energyType.split("_");
                 energyTypeSplit[0] = energyTypeSplit[0].charAt(0).toUpperCase() + energyTypeSplit[0].slice(1);
@@ -298,20 +258,14 @@ app.get('/energy-type/:selected_energy_type', (req, res) => {
             }
             var energyTypeString = "var energy_type = "+"\"" +capitalizedEnergyType + "\"";
             var energyCountsString = "var energy_counts = " + JSON.stringify(jsonPerState);
-            //console.log("selected energy type: "+energyType);
             // Handling capitalization of the energy type
             var capitalizedEnergyType;
             var consumptionSnapshotString = "<h2>"+capitalizedEnergyType+" "+"Consumption Snapshot</h2>";
             var titleEnergyTypeString = "<title>"+ "US" + " " + capitalizedEnergyType +" "+ "Energy Consumption" + "</title>"; 
-            //console.log(energyCountsString);
-            //console.log("ConsumptionString :"+consumptionSnapshotString,"titleEnergyString: "+titleEnergyTypeString);
             response = response.replace("var energy_type", energyTypeString);
             response = response.replace("var energy_counts", energyCountsString);
             response = response.replace("<title>US Energy Consumption</title>", titleEnergyTypeString);
             response = response.replace("<h2>Consumption Snapshot</h2>", consumptionSnapshotString);
-            //console.log("Energy Type Check:" +energyType);
-            //console.log("energyTypeString: "+energyTypeString)
-            //console.log("Var jsonPerStateStringCheck: " + energyCountsString);
             
             //IMAGE Replacement
             response = response.replace("<img src=\"/images/noimage.jpg\" alt=\"No Image\"", "<img src=\"" + path.join("a", "images", energyType + ".jpg").substring(1) + "\" alt=\"Image of " + capitalizedEnergyType + "\"");
@@ -339,10 +293,8 @@ app.get('/energy-type/:selected_energy_type', (req, res) => {
                 yearTotal = 0;
             }
             response = response.replace("<!-- Data to be inserted here -->", tableString);
-            console.log(tableString);
-            
-            WriteHtml(res, response);
 
+            WriteHtml(res, response);
             });        
     }).catch((err) => {
         Write404Error(res);
